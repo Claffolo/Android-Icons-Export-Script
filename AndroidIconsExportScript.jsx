@@ -1,82 +1,59 @@
-/**
-* Author: austynmahoney (https://github.com/austynmahoney)
-* 
-* Copyright 2016 Austyn Mahoney
+/*
+*   Author: Claffolo
+*   TODO: Add Licensing
 *
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
 */
+
 var selectedExportOptions = {};
 
 var androidExportOptions = [
-    {
-        name: "mdpi",
-        scaleFactor: 50,
-        type: "android"
-    },
-    {
-        name: "hdpi",
+     {
+        name: "ldpi (0.75x)",
         scaleFactor: 75,
-        type: "android"
     },
     {
-        name: "xhdpi",
+        name: "mdpi (1.0x)",
         scaleFactor: 100,
-        type: "android"
     },
     {
-        name: "xxhdpi",
+        name: "hdpi (1.5x)",
         scaleFactor: 150,
-        type: "android"
     },
     {
-        name: "xxxhdpi",
+        name: "xhdpi (2.0x)",
         scaleFactor: 200,
-        type: "android"
+    },
+    {
+        name: "xxhdpi (3.0x)",
+        scaleFactor: 300,
+    },
+    {
+        name: "xxxhdpi (4.0x)",
+        scaleFactor: 400,
     }
 ];
 
-var iosExportOptions = [
-    {
-        name: "",
-        scaleFactor: 50,
-        type: "ios"
-    },
-    {
-        name: "@2x",
-        scaleFactor: 100,
-        type: "ios"
-    },
-    {
-        name: "@3x",
-        scaleFactor: 150,
-        type: "ios"
-    }
-];
-
-var folder = Folder.selectDialog("Select export directory");
+var folder = Folder.selectDialog("Choose your export folder");
 var document = app.activeDocument;
 
 if(document && folder) {
-    var dialog = new Window("dialog","Select export sizes");
+    var dialog = new Window("dialog","Select the desired export sizes");
     var osGroup = dialog.add("group");
 
-    var androidCheckboxes = createSelectionPanel("Android", androidExportOptions, osGroup);
-    var iosCheckboxes = createSelectionPanel("iOS", iosExportOptions, osGroup);
+    var androidCheckboxes = createSelectionPanel("Scale Factors", androidExportOptions, osGroup);
+
+    var exportFormatPanel = osGroup.add("panel", undefined, "Export Format");
+    exportFormatPanel.alignment = "top";
+    var formatDropDown = exportFormatPanel.add("dropdownlist");
+    formatDropDown.add ("item", "PNG24");
+    formatDropDown.add ("item", "PNG8");
+
+
 
     var buttonGroup = dialog.add("group");
     var okButton = buttonGroup.add("button", undefined, "Export");
     var cancelButton = buttonGroup.add("button", undefined, "Cancel");
-    
+
     okButton.onClick = function() {
         for (var key in selectedExportOptions) {
             if (selectedExportOptions.hasOwnProperty(key)) {
@@ -86,7 +63,7 @@ if(document && folder) {
         }
         this.parent.parent.close();
     };
-    
+
     cancelButton.onClick = function () {
         this.parent.parent.close();
     };
@@ -98,8 +75,6 @@ function exportToFile(scaleFactor, resIdentifier, os) {
     var i, ab, file, options, expFolder;
     if(os === "android")
         expFolder = new Folder(folder.fsName + "/drawable-" + resIdentifier);
-    else if(os === "ios")
-        expFolder = new Folder(folder.fsName + "/iOS");
 
 	if (!expFolder.exists) {
 		expFolder.create();
@@ -108,15 +83,15 @@ function exportToFile(scaleFactor, resIdentifier, os) {
 	for (i = document.artboards.length - 1; i >= 0; i--) {
 		document.artboards.setActiveArtboardIndex(i);
 		ab = document.artboards[i];
-		
+
 	if(ab.name.charAt(0)=="!")
             continue;
-        
+
         if(os === "android")
             file = new File(expFolder.fsName + "/" + ab.name + ".png");
         else if(os === "ios")
             file = new File(expFolder.fsName + "/" + ab.name + resIdentifier + ".png");
-            
+
             options = new ExportOptionsPNG24();
             options.transparency = true;
             options.artBoardClipping = true;
