@@ -61,7 +61,7 @@ try{
       var dialog = new Window("dialog","Select the desired export sizes");
       var uiGroup = dialog.add("group");
 
-      var androidCheckboxes = createSelectionPanel("Scale Factors", androidExportOptions, uiGroup);
+      createSelectionPanel("Scale Factors", androidExportOptions, uiGroup);
 
       var PNG24Options = new ExportOptionsPNG24();
       PNG24Options.artBoardClipping = true;
@@ -92,6 +92,8 @@ try{
       folderTypePanel.alignChildren = "left";
       var drawable_radiobutton = folderTypePanel.add ("radiobutton", undefined, "drawable");
       var mipmap_radiobutton = folderTypePanel.add ("radiobutton", undefined, "mipmap");
+
+      drawable_radiobutton.value = true;
 
       drawable_radiobutton.onClick = function(){
         if(this.value){
@@ -152,7 +154,8 @@ function exportToFile(exportType, resIdentifier, exportOptions, scaleFactor) {
     document.artboards.setActiveArtboardIndex(i);
     var currentArtBoard = document.artboards[i];
 
-    if(currentArtBoard.name.charAt(0)=="!")
+    //if an ArtBoard name starts with ! it will be ignored
+    if(currentArtBoard.name.charAt(0)=='!')
     continue;
 
     //Creating the file naming it as the current ArtBoard
@@ -187,5 +190,9 @@ function createSelectionPanel(name, array, group) {
         delete selectedExportOptions[this.item.name];
       }
     };
+    if(cb.item.name != "ldpi"){
+      cb.value = true;
+      selectedExportOptions[cb.item.name] = cb.item;
+    }
   }
 };
