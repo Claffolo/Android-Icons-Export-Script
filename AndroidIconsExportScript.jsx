@@ -31,27 +31,27 @@ try{
     //Array containing all the different scale factors defined in the Google Android Developers guidelines
     var androidExportOptions = [
       {
-        name: "ldpi (0.75x)",
+        name: "ldpi",
         scaleFactor: 75,
       },
       {
-        name: "mdpi (1.0x)",
+        name: "mdpi",
         scaleFactor: 100,
       },
       {
-        name: "hdpi (1.5x)",
+        name: "hdpi",
         scaleFactor: 150,
       },
       {
-        name: "xhdpi (2.0x)",
+        name: "xhdpi",
         scaleFactor: 200,
       },
       {
-        name: "xxhdpi (3.0x)",
+        name: "xxhdpi",
         scaleFactor: 300,
       },
       {
-        name: "xxxhdpi (4.0x)",
+        name: "xxxhdpi",
         scaleFactor: 400,
       }
     ];
@@ -64,15 +64,17 @@ try{
       var androidCheckboxes = createSelectionPanel("Scale Factors", androidExportOptions, uiGroup);
 
       var PNG24Options = new ExportOptionsPNG24();
+      PNG24Options.artBoardClipping = true;
+      PNG24Options.transparency = false;
+      PNG24Options.antiAliasing = true;
 
       //Creating the ExportOptions Panel
       var exportFormatPanel = uiGroup.add("panel", undefined, "PNG24 Options");
       exportFormatPanel.alignment = "top";
       exportFormatPanel.alignChildren = "left";
       var transparency_checkbox = exportFormatPanel.add("checkbox", undefined, "Include Transparency");
-      var antiAliasing_checkbox = exportFormatPanel.add("checkbox", undefined, "Anti-Aliasing");
 
-      //Defining the onClick methods of the PNG24Options checkboxes
+      //Defining the onClick methods of the PNG24Options checkbox
       transparency_checkbox.onClick = function(){
         if(this.value){
           PNG24Options.transparency = true;
@@ -82,24 +84,14 @@ try{
         }
       };
 
-      antiAliasing_checkbox.onClick = function(){
-        if(this.value){
-          PNG24Options.antiAliasing = true;
-        }
-        else{
-          PNG24Options.antiAliasing = false;
-        }
-      };
-
       //Creating the FolderType Panel
-
       var folderType = "drawable";
 
       var folderTypePanel = uiGroup.add("panel", undefined, "Folder type");
       folderTypePanel.alignment = "top";
       folderTypePanel.alignChildren = "left";
       var drawable_radiobutton = folderTypePanel.add ("radiobutton", undefined, "drawable");
-      var mimap_radiobutton = folderTypePanel.add ("radiobutton", undefined, "mipmap");
+      var mipmap_radiobutton = folderTypePanel.add ("radiobutton", undefined, "mipmap");
 
       drawable_radiobutton.onClick = function(){
         if(this.value){
@@ -112,8 +104,6 @@ try{
         }
       };
 
-
-
       var buttonGroup = dialog.add("group");
       var okButton = buttonGroup.add("button", undefined, "Export");
       var cancelButton = buttonGroup.add("button", undefined, "Cancel");
@@ -122,7 +112,7 @@ try{
         for (var key in selectedExportOptions) {
           if (selectedExportOptions.hasOwnProperty(key)) {
             var item = selectedExportOptions[key];
-            exportToFile(item.scaleFactor, item.name, item.type);
+            exportToFile(folderType, item.name, PNG24Options, item.scaleFactor);
           }
         }
         this.parent.parent.close();
@@ -146,36 +136,34 @@ catch(error){
   alert (error.message, "Script Error");
 }
 
-function exportToFile(scaleFactor, resIdentifier, os) {
-  //TODO: Rewrite this function
-  var i, ab, file, options, expFolder;
-  if(os === "android")
-  expFolder = new Folder(folder.fsName + "/drawable-" + resIdentifier);
+function exportToFile(exportType, resIdentifier, exportOptions, scaleFactor) {
 
-  if (!expFolder.exists) {
-    expFolder.create();
+  //Creating the correct folder for the current element following the structure ( [UserChoice]/[drawable-currentdpi or mipmap-currentdpi] )
+  var exportFolder = new Folder(folder.fsName + "/" + exportType + "-" + resIdentifier);
+
+  if (!exportFolder.exists) {
+    exportFolder.create();
   }
 
-  for (i = document.artboards.length - 1; i >= 0; i--) {
-    document.artboards.setActiveArtboardIndex(i);
-    ab = document.artboards[i];
+  //We do the export for all the artboards in the document
+  var i = 0;
+  for (i=0; i < document.artboards.length; i++) {
 
-    if(ab.name.charAt(0)=="!")
+    document.artboards.setActiveArtboardIndex(i);
+    var currentArtBoard = document.artboards[i];
+
+    if(currentArtBoard.name.charAt(0)=="!")
     continue;
 
-    if(os === "android")
-    file = new File(expFolder.fsName + "/" + ab.name + ".png");
-    else if(os === "ios")
-    file = new File(expFolder.fsName + "/" + ab.name + resIdentifier + ".png");
+    //Creating the file naming it as the current ArtBoard
+    var current_file = new File(exportFolder.fsName + "/" + currentArtBoard.name + ".png");
 
-    options = new ExportOptionsPNG24();
-    options.transparency = true;
-    options.artBoardClipping = true;
-    options.antiAliasing = true;
-    options.verticalScale = scaleFactor;
-    options.horizontalScale = scaleFactor;
+    //Setting the Scale Factor
+    exportOptions.verticalScale = scaleFactor;
+    exportOptions.horizontalScale = scaleFactor;
 
-    document.exportFile(file, ExportType.PNG24, options);
+    //Exporting the file as a PNG24 with the prevously defined exportOptions
+    document.exportFile(current_file, ExportType.PNG24, exportOptions);
   }
 };
 
